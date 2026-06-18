@@ -1,0 +1,36 @@
+[tools]
+crystal = "1.18.2"
+
+[vars]
+# Add --progress/--verbose only in an interactive terminal (TTY check)
+SPEC_OPTS        = "{% if exec(command='(tty -s && echo true) || echo false') == 'true' %}--verbose{% endif %}"
+COMPILE_OPTS_DEV = "{% if exec(command='(tty -s && echo true) || echo false') == 'true' %}--progress{% endif %}"
+
+[tasks."dev:deps"]
+description = "Install development dependencies"
+run = "shards install"
+
+[tasks."dev:spec"]
+description = "Run the spec suite"
+run = "crystal spec {{vars.SPEC_OPTS}}"
+
+[tasks."dev:ameba"]
+description = "Run static code analysis"
+run = "bin/ameba"
+
+[tasks."dev:format"]
+description = "Format the source"
+run = "crystal tool format src/ spec/"
+
+[tasks."dev:build"]
+description = "Compile-check the library (no binary; ensures it builds)"
+run = "crystal build {{vars.COMPILE_OPTS_DEV}} --no-codegen src/mcp.cr"
+
+[tasks."dev:check"]
+description = "Build-check, lint and test in one shot"
+run = "mise dev:build && mise dev:ameba && mise dev:spec"
+
+# TODO: remove me when https://github.com/crystal-lang/crystal/issues/16746 is fixed
+[tasks."dev:fix-shards-command"]
+description = "Fix missing shards command"
+run = "cp $HOME/.local/share/mise/installs/crystal/{{tools.crystal.version}}/embedded/bin/shards $HOME/.local/share/mise/installs/crystal/{{tools.crystal.version}}/bin/"
